@@ -1,0 +1,59 @@
+#!/bin/bash
+
+## THIS FILE IS PUPPETIZED, CHANGES WILL BE OVERWRITTEN EVENTUALLY
+## CONTACT A SYSADMIN TO CHANGE SETTINGS IN HERE
+
+set -e
+
+export CHROOT_PATH=<%= @path %>
+
+# Create devices
+mkdir -p ${CHROOT_PATH}/dev
+[ -r ${CHROOT_PATH}/dev/random ]  || mknod ${CHROOT_PATH}/dev/random         c 1 8
+[ -r ${CHROOT_PATH}/dev/urandom ] || mknod ${CHROOT_PATH}/dev/urandom        c 1 9
+[ -r ${CHROOT_PATH}/dev/null ]    || mknod -m 644 ${CHROOT_PATH}/dev/null    c 1 3
+[ -r ${CHROOT_PATH}/dev/zero ]    || mknod -m 644 ${CHROOT_PATH}/dev/zero    c 1 5
+[ -r ${CHROOT_PATH}/dev/tty ]     || mknod -m 644 ${CHROOT_PATH}/dev/tty     c 5 0
+chmod 644 ${CHROOT_PATH}/dev/*
+
+<%- unless @copy.empty? -%>
+# Copy requested files
+for FILE in <%= @copy.join(' ') %>
+do
+  mkdir -p `dirname $CHROOT_PATH$FILE`
+  rsync -a --delete ${FILE} ${CHROOT_PATH}${FILE}
+done
+<%- end -%>
+
+<%- unless @binaries.empty? -%>
+# Copy libraries needed by the requested binaries
+for BIN in <%= @binaries.join(' ') %>
+do
+  REAL_BIN=`which ${BIN}`
+  # iggy ld-linux* file as it is not shared one
+  FILES="$(ldd ${REAL_BIN} | awk '{ print $3 }' | egrep -v ^'\(')"
+
+  for i in $FILES
+  do
+    d="$(dirname $i)"
+    [ ! -d $CHROOT_PATH$d ] && mkdir -p $CHROOT_PATH$d || :
+    /bin/cp $i $CHROOT_PATH$d
+  done
+
+  # copy /lib/ld-linux* or /lib64/ld-linux* to $CHROOT_PATH/$sldlsubdir
+  # get ld-linux full file location
+  sldl="$(ldd ${REAL_BIN} | grep 'ld-linux' | awk '{ print $1}')"
+  # now get sub-dir
+  sldlsubdir="$(dirname $sldl)"
+
+  if [ ! -f $CHROOT_PATH$sldl ];
+  then
+    echo "Copying $sldl $CHROOT_PATH$sldlsubdir..."
+    /bin/cp $sldl $CHROOT_PATH$sldlsubdir
+  fi
+
+  # Copy the actual binary file
+  mkdir -p `dirname $CHROOT_PATH$REAL_BIN`
+  /bin/cp ${REAL_BIN} ${CHROOT_PATH}${REAL_BIN}
+done
+<%- end -%>
