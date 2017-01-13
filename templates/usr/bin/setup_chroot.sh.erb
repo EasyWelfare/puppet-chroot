@@ -21,7 +21,7 @@ chmod 666 ${CHROOT_PATH}/dev/*
 for FILE in <%= @copy.join(' ') %>
 do
   mkdir -p `dirname $CHROOT_PATH$FILE`
-  rsync -a --delete ${FILE} ${CHROOT_PATH}${FILE}
+  rsync -a --delete ${FILE} `dirname $CHROOT_PATH$FILE`
 done
 <%- end -%>
 
