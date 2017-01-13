@@ -37,7 +37,10 @@ define chroot::chroot (
         true    => false,
         default => true
       },
-      require     => Package['rsync'],
+      require     => [
+        Package['rsync'],
+        Anchor['chroot::before_setup']
+      ],
       subscribe   => File["/usr/bin/${title}-setup.sh"],
     }
   }
