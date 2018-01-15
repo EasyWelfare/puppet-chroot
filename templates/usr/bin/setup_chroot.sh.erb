@@ -48,6 +48,7 @@ do
 
   if [ ! -f $CHROOT_PATH$sldl ];
   then
+    mkdir -p $CHROOT_PATH$sldlsubdir
     echo "Copying $sldl $CHROOT_PATH$sldlsubdir..."
     /bin/cp $sldl $CHROOT_PATH$sldlsubdir
   fi
