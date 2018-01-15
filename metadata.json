@@ -1,6 +1,6 @@
 {
   "name": "chroot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Skyscrapers",
   "summary": "Puppet module to create chroot jails",
   "license": "Apache-2.0",
