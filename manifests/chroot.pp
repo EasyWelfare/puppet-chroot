@@ -8,17 +8,6 @@ define chroot::chroot (
   $always_rebuild = false,
 ) {
 
-  # Create (or delete) the chroot path
-  file { $path:
-    ensure  => $ensure ? {
-      'present' => directory,
-      default   => absent
-    },
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0755'
-  }
-
   file { "/usr/bin/${title}-setup.sh":
     ensure  => $ensure,
     mode    => '0755',
